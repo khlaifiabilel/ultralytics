@@ -74,7 +74,7 @@ class DatasetUtil:
     """
 
     #TODO: Allow starting from an existing table
-    def __init__(self, data=None, table=None, model="yolov8n.pt", project="runs/dataset") -> None:
+    def __init__(self, data=None, table=None, model='yolov8n.pt', project='runs/dataset') -> None:
         """
         Args:
             dataset (str): path to dataset
@@ -83,10 +83,10 @@ class DatasetUtil:
         if data is None and table is None:
             raise ValueError('Either data or table must be provided')
 
-        self.data = data 
+        self.data = data
         self.table = None
         self.project = project
-        self.table_name = data if data is not None else Path(table).stem # Keep the table name when copying
+        self.table_name = data if data is not None else Path(table).stem  # Keep the table name when copying
         self.temp_table_name = self.table_name + '_temp'
         self.dataset_info = None
         self.predictor = None
@@ -101,7 +101,6 @@ class DatasetUtil:
             self.predictor = self._setup_predictor(model)
         if data:
             self.dataset_info = get_dataset_info(self.data)
-    
 
     def build_embeddings(self, verbose=False, force=False):
         trainset = self.dataset_info['train']
@@ -142,7 +141,7 @@ class DatasetUtil:
 
     def get_similar_imgs(self, img, n=10):
         if isinstance(img, int):
-            img_path = str(self.table.to_arrow()["path"][img])
+            img_path = str(self.table.to_arrow()['path'][img])
         elif isinstance(img, (str, Path)):
             img_path = img
         else:
@@ -228,9 +227,9 @@ class DatasetUtil:
         mask = [True for _ in range(len(pa_table))]
         for idx in idxs:
             mask[idx] = False
-        
+
         self.removed_img_count += len(idxs)
-            
+
         table = pa_table.filter(mask)
         ids = [i for i in range(len(table))]
         table = table.set_column(1, 'id', [ids])
@@ -279,7 +278,7 @@ class DatasetUtil:
         if (path / train_txt).exists():
             (path / train_txt).unlink()  # remove existing
 
-        for img in tqdm(self.table.to_pandas()["path"].to_list()):
+        for img in tqdm(self.table.to_pandas()['path'].to_list()):
             with open(path / train_txt, 'a') as f:
                 f.write(f'./{Path(img).relative_to(path).as_posix()}' + '\n')  # add image to txt file
 
@@ -313,26 +312,26 @@ class DatasetUtil:
         db = lancedb.connect(self.project)
 
         return db
-    
+
     def _create_table(self, name, data=None, mode='overwrite'):
         db = lancedb.connect(self.project)
         table = db.create_table(name, data=data, mode=mode)
 
         return table
-    
+
     def _open_table(self, name):
         db = lancedb.connect(self.project)
         table = db.open_table(name)
 
         return table
-    
-    def _copy_table_to_project(self, table_path):
-        if not table_path.endswith(".lance"):
-            raise ValueError("Table must be a .lance file")
 
-        LOGGER.info(f"Copying table from {table_path}")
+    def _copy_table_to_project(self, table_path):
+        if not table_path.endswith('.lance'):
+            raise ValueError('Table must be a .lance file')
+
+        LOGGER.info(f'Copying table from {table_path}')
         path = Path(table_path).parent
-        name = Path(table_path).stem # lancedb doesn't need .lance extension
+        name = Path(table_path).stem  # lancedb doesn't need .lance extension
         db = lancedb.connect(path)
         table = db.open_table(name)
         return self._create_table(self.table_name, data=table.to_arrow(), mode='overwrite')
